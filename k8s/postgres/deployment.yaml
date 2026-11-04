@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: taskforge-postgres
+  namespace: taskforge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: taskforge-postgres
+  template:
+    metadata:
+      labels:
+        app: taskforge-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:18
+          ports:
+            - containerPort: 5432
+
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: taskforge-db-secret
+                  key: POSTGRES_DB
+
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: taskforge-db-secret
+                  key: POSTGRES_USER
+
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: taskforge-db-secret
+                  key: POSTGRES_PASSWORD
+
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql
+
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: taskforge-postgres-pvc
